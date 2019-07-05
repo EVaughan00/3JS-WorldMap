@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import Sphere from '../objects/Sphere'
-import DragRotate from '../objects/dragRotate'
+import DragRotateZoom from '../objects/dragRotateZoom'
 
 class Home extends Component {
   render() {
@@ -9,7 +9,7 @@ class Home extends Component {
         <header>
           <h1 style={{color: 'white'}}>Evan's World Travel Simulation</h1>
         </header>
-          <DragRotate/>
+          <DragRotateZoom/>
       </div>
     )
   }

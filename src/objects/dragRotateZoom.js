@@ -4,8 +4,9 @@ import Earth from '../images/earthmap1k.jpg'
 import EarthBump from '../images/earthbump1k.jpg'
 import canvasCloud from '../images/earthcloudmap.jpg'
 import Galaxy from '../images/galaxy_starfield1.png'
+var OrbitControls = require('three-orbit-controls')(THREE)
 
-class DragRotate extends Component {
+class DragRotateZoom extends Component {
   constructor(props) {
      super(props)
 
@@ -66,11 +67,16 @@ class DragRotate extends Component {
 
      var isDragging = false;
      var isTouch = false;
+     var isZoomed = false;
      var previousMousePosition = {
          x: 0,
          y: 0
      };
 
+     var mX = 0;
+     var mY = 0;
+     var startmX = 0;
+     var startmY = 0;
      //scene.background = bgTexture;
      //var controls  = new THREE.OrbitControls(camera, renderer.domElement)
      scene.add(cube)
@@ -84,6 +90,7 @@ class DragRotate extends Component {
      this.cube = cube
      this.cloudMesh = cloudMesh
      this.mesh = mesh
+     this.isZoomed = isZoomed
 
      var mouse = {x:0, y:0}
 
@@ -105,7 +112,9 @@ class DragRotate extends Component {
      })
 
      document.addEventListener('mousemove', function(e) {
-       handleMouseMove(e)
+
+         handleMouseMove(e)
+
      }, false)
      document.addEventListener('touchmove', function(e) {
        handleMouseMove(e)
@@ -114,43 +123,42 @@ class DragRotate extends Component {
     function handleMouseMove(e) {
 
     e.preventDefault()
-
-    var deltaMove = {}
-
-    if (isTouch) {
-      deltaMove = {
-        x: e.touches[0].clientX-previousMousePosition.x,
-        y: e.touches[0].clientY-previousMousePosition.y
-      }
-    } else {
-      deltaMove = {
-         x: e.offsetX-previousMousePosition.x,
-         y: e.offsetY-previousMousePosition.y
-     }
-    }
-
-      if(isDragging) {
-          var deltaRotationQuaternion = new THREE.Quaternion()
-              .setFromEuler(new THREE.Euler(
-                  toRadians(deltaMove.y * 1),
-                  toRadians(deltaMove.x * 1),
-                  0,
-                  'XYZ'
-              ));
-
-          cube.quaternion.multiplyQuaternions(deltaRotationQuaternion, cube.quaternion);
+        var deltaMove = {}
+        if (isTouch) {
+           deltaMove = {
+             x: e.touches[0].clientX-previousMousePosition.x,
+             y: e.touches[0].clientY-previousMousePosition.y
+           }
+        } else {
+          deltaMove = {
+             x: e.offsetX-previousMousePosition.x,
+             y: e.offsetY-previousMousePosition.y
+         }
         }
-     if (isTouch) {
-      previousMousePosition = {
-          x: e.touches[0].clientX,
-          y: e.touches[0].clientY
-      }
-      } else {
-      previousMousePosition = {
-          x: e.offsetX,
-          y: e.offsetY
-      };
-    }
+
+          if(isDragging) {
+              var deltaRotationQuaternion = new THREE.Quaternion()
+                  .setFromEuler(new THREE.Euler(
+                      toRadians(deltaMove.y * 1),
+                      toRadians(deltaMove.x * 1),
+                      0,
+                      'XYZ'
+                  ));
+
+              cube.quaternion.multiplyQuaternions(deltaRotationQuaternion, cube.quaternion);
+            }
+         if (isTouch) {
+          previousMousePosition = {
+              x: e.touches[0].clientX,
+              y: e.touches[0].clientY
+          }
+          } else {
+          previousMousePosition = {
+              x: e.offsetX,
+              y: e.offsetY
+          };
+        }
+
     }
 
     document.addEventListener('mouseup', function(e) {
@@ -160,6 +168,43 @@ class DragRotate extends Component {
         isDragging = false;
         isTouch = false;
     });
+
+    //var controls = new OrbitControls( camera, renderer.domElement );
+
+    document.addEventListener('dblclick', async function(e) {
+      mX = ( e.offsetX / window.innerWidth ) * 2 - 1;
+      mY = - ( e.offsetY / window.innerHeight ) * 2 + 1;
+      var i = 0
+      var transitionRatio = 15;
+      var zoomValue = 0.9;
+      if (!isZoomed) {
+        for (i = 0; i < transitionRatio; i++) {
+          var vector = new THREE.Vector3(mX, mY, 1 );
+          vector.unproject(camera);
+          vector.sub(camera.position);
+          camera.position.addVectors(camera.position,vector.setLength(zoomValue/transitionRatio));
+          await sleep(10)
+        }
+        startmX = mX
+        startmY = mY
+        //controls.target.addVectors(controls.target,vector.setLength(0.6));
+        isZoomed = true;
+      } else {
+        for (i = 0; i < transitionRatio; i++) {
+          var vector1 = new THREE.Vector3(startmX, startmY, 1 );
+          vector1.unproject(camera);
+          vector1.sub(camera.position);
+          camera.position.addVectors(camera.position,vector1.setLength(-zoomValue/transitionRatio));
+          await sleep(10)
+        }
+        // controls.target.addVectors(controls.target,vector1.setLength(0.6));
+        isZoomed = false;
+      }
+    })
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
      // function onDocumentMouseDown( event ) {
      //
      //                 event.preventDefault();
@@ -234,4 +279,4 @@ class DragRotate extends Component {
      )
    }
 }
-export default DragRotate
+export default DragRotateZoom

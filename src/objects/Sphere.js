@@ -12,6 +12,7 @@ class Sphere extends Component {
      this.start = this.start.bind(this)
      this.stop = this.stop.bind(this)
      this.animate = this.animate.bind(this)
+     this.rotateAroundWorldAxis = this.rotateAroundWorldAxis.bind(this)
    }
 
    componentDidMount() {
@@ -58,8 +59,22 @@ class Sphere extends Component {
      var mesh  = new THREE.Mesh(geometryStars, materialStars)
 
 
+     var targetRotationX = 0.5;
+                 var targetRotationOnMouseDownX = 0;
 
+                 var targetRotationY = 0.2;
+                 var targetRotationOnMouseDownY = 0;
 
+                 var mouseX = 0;
+                 var mouseXOnMouseDown = 0;
+
+                 var mouseY = 0;
+                 var mouseYOnMouseDown = 0;
+
+                 var windowHalfX = window.innerWidth / 2;
+                 var windowHalfY = window.innerHeight / 2;
+
+                 var slowingFactor = 0.25;
     cube.add(mesh)
      //scene.background = bgTexture;
      //var controls  = new THREE.OrbitControls(camera, renderer.domElement)
@@ -75,9 +90,25 @@ class Sphere extends Component {
      this.cloudMesh = cloudMesh
      this.mesh = mesh
 
-     var mouse = {x:0, y:0}
+     this.targetRotationX = targetRotationX;
+     this.targetRotationOnMouseDownX = targetRotationOnMouseDownX;
+
+     this.targetRotationY = targetRotationY;
+     this.targetRotationOnMouseDownY = targetRotationOnMouseDownY;
+     this.mouseX = mouseX;
+     this.mouseXOnMouseDown = mouseXOnMouseDown;
+
+     this.mouseY = mouseY;
+     this.mouseYOnMouseDown = mouseYOnMouseDown;
+
+     this.windowHalfX = windowHalfX;
+     this.windowHalfY = windowHalfY;
+
+     this.slowingFactor =  slowingFactor;
+
 
      document.addEventListener('mousedown', onDocumentMouseDown, false)
+
 
      function onDocumentMouseDown( event ) {
 
@@ -87,13 +118,24 @@ class Sphere extends Component {
                      document.addEventListener( 'mouseup', onDocumentMouseUp, false );
                      document.addEventListener( 'mouseout', onDocumentMouseOut, false );
 
+                     mouseXOnMouseDown = event.clientX - windowHalfX;
+                     targetRotationOnMouseDownX = targetRotationX;
+
+                     mouseYOnMouseDown = event.clientY - windowHalfY;
+                     targetRotationOnMouseDownY = targetRotationY;
 
                  }
 
                  function onDocumentMouseMove( event ) {
 
-                   mouse.x = (event.clientX / window.innerWidth ) - 0.5
-                   mouse.y = (event.clientY / window.innerHeight) - 0.5
+                mouseX = event.clientX - windowHalfX;
+
+                targetRotationX = (mouseX - mouseXOnMouseDown ) * 0.00025;
+
+                mouseY = event.clientY - windowHalfY;
+
+                targetRotationY = ( mouseY - mouseYOnMouseDown ) * 0.00025;
+
                  }
 
                  function onDocumentMouseUp( event ) {
@@ -109,8 +151,6 @@ class Sphere extends Component {
                      document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
                      document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
                  }
-
-     this.mouse = mouse
 
 
 
@@ -135,21 +175,37 @@ class Sphere extends Component {
    }
 
    animate() {
-     this.cube.rotation.y += 0.001
-     this.cloudMesh.rotation.y += 0.001
-     this.mesh.rotation.y -= 0.001
+     // this.cube.rotation.y += 0.001
+     // this.cloudMesh.rotation.y += 0.001
+     // this.mesh.rotation.y -= 0.001
 
-     this.camera.position.x += (this.mouse.x*5 - this.camera.position.x) * 1
-     this.camera.position.y += (this.mouse.y*5 - this.camera.position.y) * 1
-     this.camera.lookAt( this.scene.position )
+
+     //this.camera.lookAt( this.scene.position )
 
      this.renderScene()
      this.frameId = window.requestAnimationFrame(this.animate)
    }
 
    renderScene() {
+     console.log(this.targetRotationX)
+
+     this.rotateAroundWorldAxis(this.cube, new THREE.Vector3(0, 1, 0), this.targetRotationX);
+     this.rotateAroundWorldAxis(this.cube, new THREE.Vector3(1, 0, 0), this.targetRotationY);
+
+     this.targetRotationY = this.targetRotationY * (1 - this.slowingFactor);
+     this.targetRotationX = this.targetRotationX * (1 - this.slowingFactor);
      this.renderer.render(this.scene, this.camera)
    }
+
+   rotateAroundWorldAxis( object, axis, radians) {
+
+              var rotationMatrix = new THREE.Matrix4();
+
+              rotationMatrix.makeRotationAxis( axis.normalize(), radians );
+              rotationMatrix.multiply( object.matrix );                       // pre-multiply
+              object.matrix = rotationMatrix;
+              object.rotation.setFromRotationMatrix( object.matrix );
+          }
 
    render() {
      return (
