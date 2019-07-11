@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import * as THREE from 'three'
 import Earth from '../images/earthmap1k.jpg'
-import EarthBump from '../images/earthbump1k.jpg'
+import EarthBump from '../images/worldel.jpg'
 import canvasCloud from '../images/earthcloudmap.jpg'
 import Galaxy from '../images/galaxy_starfield1.png'
 var OrbitControls = require('three-orbit-controls')(THREE)
@@ -26,18 +26,18 @@ class DragRotateZoom extends Component {
      )
      const renderer = new THREE.WebGLRenderer()
      renderer.setSize(1062, 850);
-     const geometry = new THREE.SphereGeometry(0.5, 32, 32)
+     const geometry = new THREE.SphereGeometry(0.5, 60, 60)
      const material = new THREE.MeshPhongMaterial()
 
      material.map = THREE.ImageUtils.loadTexture(Earth)
      material.bumpMap = THREE.ImageUtils.loadTexture(EarthBump)
-     material.bumpScale = 0.05
+     material.bumpScale = 0.03
 
      var geometryCloud   = new THREE.SphereGeometry(0.51, 32, 32)
      var materialCloud  = new THREE.MeshPhongMaterial({
        map         : THREE.ImageUtils.loadTexture(canvasCloud),
        side        : THREE.DoubleSide,
-       opacity     : 0.5,
+       opacity     : 0.3,
        transparent : true,
        depthWrite  : false,
      })
@@ -92,6 +92,9 @@ class DragRotateZoom extends Component {
      this.mesh = mesh
      this.isZoomed = isZoomed
 
+
+     var quarter = {x: 0.12455425453259228, y: 0.035089862385512365, z: 0.05541988674897867, w: 0.9900422088922909}
+
      var mouse = {x:0, y:0}
 
      function toRadians(angle) {
@@ -101,6 +104,12 @@ class DragRotateZoom extends Component {
       function toDegrees(angle) {
       	return angle * (180 / Math.PI);
       }
+
+     document.addEventListener('keydown', function(e) {
+       if (e.keyCode == 82) {
+         cube.quaternion.set(quarter.x, quarter.y, quarter.z, quarter.w)
+       }
+     })
 
      document.addEventListener('mousedown', function(e) {
          isDragging = true;
@@ -172,11 +181,11 @@ class DragRotateZoom extends Component {
     //var controls = new OrbitControls( camera, renderer.domElement );
 
     document.addEventListener('dblclick', async function(e) {
-      mX = ( e.offsetX / window.innerWidth ) * 2 - 1;
-      mY = - ( e.offsetY / window.innerHeight ) * 2 + 1;
+      mX = ( e.pageX / window.innerWidth ) * 2 - 1;
+      mY = - ( e.pageY / window.innerHeight ) * 2 + 1;
       var i = 0
       var transitionRatio = 15;
-      var zoomValue = 0.9;
+      var zoomValue = 0.8;
       if (!isZoomed) {
         for (i = 0; i < transitionRatio; i++) {
           var vector = new THREE.Vector3(mX, mY, 1 );
@@ -205,36 +214,6 @@ class DragRotateZoom extends Component {
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
-     // function onDocumentMouseDown( event ) {
-     //
-     //                 event.preventDefault();
-     //
-     //                 document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-     //                 document.addEventListener( 'mouseup', onDocumentMouseUp, false );
-     //                 document.addEventListener( 'mouseout', onDocumentMouseOut, false );
-     //
-     //
-     //             }
-     //
-     //             function onDocumentMouseMove( event ) {
-     //
-     //               mouse.x = (event.clientX / window.innerWidth ) - 0.5
-     //               mouse.y = (event.clientY / window.innerHeight) - 0.5
-     //             }
-     //
-     //             function onDocumentMouseUp( event ) {
-     //
-     //                 document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
-     //                 document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
-     //                 document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
-     //             }
-     //
-     //             function onDocumentMouseOut( event ) {
-     //
-     //                 document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
-     //                 document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
-     //                 document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
-     //             }
 
      this.mouse = mouse
 
